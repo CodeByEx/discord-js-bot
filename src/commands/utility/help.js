@@ -109,6 +109,7 @@ async function getHelpMenu({ client, guild }) {
   let components = [];
   components.push(
     new ButtonBuilder().setCustomId("previousBtn").setEmoji("⬅️").setStyle(ButtonStyle.Secondary).setDisabled(true),
+    new ButtonBuilder().setCustomId("closeBtn").setLabel("X").setStyle(ButtonStyle.Danger),
     new ButtonBuilder().setCustomId("nextBtn").setEmoji("➡️").setStyle(ButtonStyle.Secondary).setDisabled(true)
   );
 
@@ -150,7 +151,7 @@ const waiter = (msg, userId, prefix) => {
   let buttonsRow = msg.components[1];
 
   collector.on("collect", async (response) => {
-    if (!["help-menu", "previousBtn", "nextBtn"].includes(response.customId)) return;
+    if (!["help-menu", "previousBtn", "nextBtn", "closeBtn"].includes(response.customId)) return;
     await response.deferUpdate();
 
     switch (response.customId) {
@@ -183,8 +184,13 @@ const waiter = (msg, userId, prefix) => {
           msg.editable && (await msg.edit({ embeds: [arrEmbeds[currentPage]], components: [menuRow, buttonsRow] }));
         }
         break;
-    }
-  });
+        
+        case "closeBtn":
+          const aboutMeEmbed = await getHelpMenu(response);
+          msg.editable && (await msg.edit({ ...aboutMeEmbed, components: [] }));
+          break;
+      }
+    });
 
   collector.on("end", () => {
     if (!msg.guild || !msg.channel) return;
